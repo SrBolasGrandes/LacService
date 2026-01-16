@@ -1,35 +1,37 @@
-from flask import Flask, request, render_template_string, redirect
+import os
 import time
 import re
 import requests
+from flask import Flask, request, render_template_string, redirect
 
 app = Flask(__name__)
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-key")
 
-# ===== reCAPTCHA =====
-SITE_KEY = "SITE_KEY_AQUI"
-SECRET_KEY = "SECRET_KEY_AQUI"
+# ===== reCAPTCHA (VARIÁVEIS EXTERNAS) =====
+SITE_KEY = os.getenv("RECAPTCHA_SITE_KEY")
+SECRET_KEY = os.getenv("RECAPTCHA_SECRET_KEY")
+
+if not SITE_KEY or not SECRET_KEY:
+    raise RuntimeError("Defina RECAPTCHA_SITE_KEY e RECAPTCHA_SECRET_KEY nas variáveis de ambiente")
 
 # ===== DADOS EM MEMÓRIA =====
-usuarios = {}
-servicos = {}
-mensagens = {}
-tentativas = {}
+usuarios = {}        # nome -> senha
+servicos = {}        # servico -> usuario
+mensagens = {}       # servico -> mensagem
+tentativas = {}      # nome -> erros
 
-# ===== BASE HTML =====
+# ===== BASE HTML + CSS =====
 BASE_HTML = """
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>anonimo test msg</title>
+<title>Cabeça de bago, canela de angu, ce fala que gosta e eu como seu ku</title>
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <style>
-* {
-    box-sizing: border-box;
-    font-family: Arial, Helvetica, sans-serif;
-}
+* { box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; }
 body {
-    background: #f4f6f8;
+    background: #f1f5f9;
     margin: 0;
     height: 100vh;
     display: flex;
@@ -37,56 +39,41 @@ body {
     align-items: center;
 }
 .card {
-    background: #fff;
-    padding: 30px;
+    background: #ffffff;
+    padding: 32px;
     width: 380px;
-    border-radius: 10px;
-    box-shadow: 0 10px 30px rgba(0,0,0,.1);
+    border-radius: 12px;
+    box-shadow: 0 10px 35px rgba(0,0,0,.12);
 }
-h2 {
-    margin-top: 0;
-    text-align: center;
-}
+h2 { text-align: center; margin-top: 0; }
 input {
     width: 100%;
     padding: 10px;
-    margin-top: 6px;
-    margin-bottom: 14px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
+    margin: 8px 0 14px 0;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
 }
 button {
     width: 100%;
     padding: 10px;
     background: #2563eb;
-    border: none;
     color: white;
-    border-radius: 6px;
+    border: none;
+    border-radius: 8px;
     font-size: 15px;
     cursor: pointer;
 }
-button:hover {
-    background: #1e4ed8;
-}
-.msg-erro {
-    color: #dc2626;
-    text-align: center;
-}
-.msg-ok {
-    color: #16a34a;
-    text-align: center;
-}
-small {
-    display: block;
-    text-align: center;
-    margin-top: 15px;
-}
+button:hover { background: #1d4ed8; }
+.msg-erro { color: #dc2626; text-align: center; }
+.msg-ok { color: #16a34a; text-align: center; }
+small { display: block; text-align: center; margin-top: 14px; }
 code {
     display: block;
-    background: #f1f5f9;
+    background: #e5e7eb;
     padding: 8px;
     border-radius: 6px;
     text-align: center;
+    font-size: 13px;
 }
 </style>
 </head>
@@ -161,7 +148,7 @@ def cadastro():
             erro = "Já existe um usuário com esse nome"
         elif len(nome) < 5:
             erro = "O nome precisa ter pelo menos 5 letras"
-        elif len(senha) < 3 or not re.search(r"\d", senha):
+        elif len(senha) < 3 or not re.search(r"\\d", senha):
             erro = "A senha precisa ter pelo menos 3 caracteres e um número"
         else:
             usuarios[nome] = senha
@@ -173,6 +160,9 @@ def cadastro():
 @app.route("/servico/<nome>", methods=["GET", "POST"])
 def criar_servico(nome):
     erro = ""
+    if nome not in usuarios:
+        return "Usuário inválido"
+
     if request.method == "POST":
         servico = request.form["servico"]
         if servico in servicos:
@@ -229,6 +219,9 @@ def get_servico(nome):
 
 @app.route("/painel/<servico>", methods=["GET", "POST"])
 def painel(servico):
+    if servico not in servicos:
+        return "Serviço inválido"
+
     ok = ""
     if request.method == "POST":
         mensagens[servico] = request.form["mensagem"]
@@ -236,16 +229,22 @@ def painel(servico):
 
     return render_template_string(BASE_HTML, content=render_template_string(PAINEL_HTML, servico=servico, ok=ok))
 
+# ===== WEBREQUEST (ESTILO LAC) =====
+
 @app.route("/link/<servico>/getmsg")
 def getmsg(servico):
     inicio = time.time()
+
     while time.time() - inicio < 3:
         if mensagens.get(servico):
             msg = mensagens[servico]
             mensagens[servico] = None
             return f"|| MENSAGEM || : {msg}"
         time.sleep(0.1)
+
     return ""
+
+# ===== MAIN =====
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, threaded=True)
