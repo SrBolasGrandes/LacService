@@ -1,122 +1,79 @@
 import os
-import re
-import requests
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, session, url_for
 
 app = Flask(__name__)
-app.secret_key = os.getenv("FLASK_SECRET", "dev_secret")
+app.secret_key = os.getenv("FLASK_SECRET", "secret")
 
-# reCAPTCHA (variáveis externas – Render)
-SITE_KEY = os.getenv("RECAPTCHA_SITE_KEY")
-SECRET_KEY = os.getenv("RECAPTCHA_SECRET_KEY")
-
-# Banco simples em memória (produção → use Postgres)
 users = {}
+services = {}
 messages = {}
 
-def senha_valida(s):
-    return len(s) >= 3 and any(c.isdigit() for c in s)
+def valid_user(name):
+    return len(name) >= 6 and name.isalnum()
 
-def nome_valido(n):
-    return len(n) >= 5 and n.isalpha()
+def valid_pass(p):
+    return len(p) >= 3 and any(c.isdigit() for c in p)
 
-def verificar_captcha(token):
-    if not token:
-        return False
-    r = requests.post(
-        "https://www.google.com/recaptcha/api/siteverify",
-        data={"secret": SECRET_KEY, "response": token}
-    )
-    return r.json().get("success", False)
+@app.route("/", methods=["GET", "POST"])
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    error = None
+    if request.method == "POST":
+        u = request.form["user"]
+        p = request.form["password"]
+        if u in users and users[u]["password"] == p:
+            session["user"] = u
+            return redirect("/dashboard")
+        error = "Login inválido"
+    return render_template("login.html", error=error)
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
     error = None
     if request.method == "POST":
-        nome = request.form["name"]
-        senha = request.form["password"]
-
-        if nome in users:
-            error = "Já existe um usuário com esse nome"
-        elif not nome_valido(nome):
-            error = "Nome precisa ter pelo menos 5 letras"
-        elif not senha_valida(senha):
-            error = "Senha precisa ter 3 caracteres e um número"
+        u = request.form["user"]
+        p = request.form["password"]
+        if u in users:
+            error = "Usuário já existe"
+        elif not valid_user(u):
+            error = "Usuário inválido"
+        elif not valid_pass(p):
+            error = "Senha inválida"
         else:
-            users[nome] = {
-                "password": senha,
-                "errors": 0,
-                "service": None
-            }
-            session["user"] = nome
-            return redirect(url_for("service"))
-
+            users[u] = {"password": p, "services": []}
+            session["user"] = u
+            return redirect("/dashboard")
     return render_template("register.html", error=error)
 
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    error = None
-    show_captcha = False
-
-    if request.method == "POST":
-        nome = request.form["name"]
-        senha = request.form["password"]
-
-        user = users.get(nome)
-        if not user:
-            error = "Usuário não existe"
-        else:
-            if user["errors"] >= 3:
-                show_captcha = True
-                if not verificar_captcha(request.form.get("g-recaptcha-response")):
-                    error = "Captcha inválido"
-                    return render_template("login.html", error=error, show_captcha=True, site_key=SITE_KEY)
-
-            if senha != user["password"]:
-                user["errors"] += 1
-                error = "Senha incorreta"
-            else:
-                user["errors"] = 0
-                session["user"] = nome
-                return redirect(url_for("service"))
-
-    return render_template("login.html", error=error, show_captcha=show_captcha, site_key=SITE_KEY)
-
-@app.route("/service", methods=["GET", "POST"])
-def service():
+@app.route("/dashboard")
+def dashboard():
     if "user" not in session:
-        return redirect(url_for("login"))
+        return redirect("/login")
+    return render_template("dashboard.html", services=users[session["user"]]["services"])
 
-    error = None
+@app.route("/create_service", methods=["POST"])
+def create_service():
+    name = request.form["service"]
+    if name not in services:
+        services[name] = session["user"]
+        messages[name] = None
+        users[session["user"]]["services"].append(name)
+    return redirect("/dashboard")
+
+@app.route("/service/<name>", methods=["GET", "POST"])
+def service(name):
+    if "user" not in session or services.get(name) != session["user"]:
+        return redirect("/login")
     if request.method == "POST":
-        service_name = request.form["service"]
+        messages[name] = request.form["msg"]
+    return render_template("service.html", name=name)
 
-        if service_name in messages:
-            error = "Já existe um serviço com esse nome"
-        else:
-            users[session["user"]]["service"] = service_name
-            messages[service_name] = None
-            return redirect(f"/link/{service_name}")
-
-    return render_template("service.html", error=error)
-
-@app.route("/link/<service>")
-def link(service):
-    if service not in messages:
-        return "Serviço não encontrado", 404
-    return f"Serviço ativo: {service}"
-
-@app.route("/link/<service>/send", methods=["POST"])
-def send(service):
-    messages[service] = request.form.get("msg")
-    return "OK"
-
-@app.route("/link/<service>/getmsg")
-def getmsg(service):
-    msg = messages.get(service)
+@app.route("/link/<name>/getmsg")
+def getmsg(name):
+    msg = messages.get(name)
     if not msg:
         return ""
-    messages[service] = None
+    messages[name] = None
     return f"|| MENSAGEM || : {msg}"
 
 if __name__ == "__main__":
