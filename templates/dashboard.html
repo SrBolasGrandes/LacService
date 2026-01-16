@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Dashboard</title>
+<style>
+body{font-family:Arial;background:#f2f2f2;padding:30px}
+.top{display:flex;justify-content:space-between}
+.card{background:#fff;padding:15px;margin-top:10px;border-radius:8px}
+button{padding:8px}
+</style>
+</head>
+<body>
+<div class="top">
+<h2>Dashboard</h2>
+<form method="post" action="/create_service">
+<input name="service" placeholder="Novo serviço">
+<button>Criar</button>
+</form>
+</div>
+
+{% for s in services %}
+<div class="card">
+<a href="/service/{{s}}">{{s}}</a>
+</div>
+{% endfor %}
+
+</body>
+</html>
