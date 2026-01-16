@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Serviço</title>
-    <link rel="stylesheet" href="/static/style.css">
+<title>{{name}}</title>
+<style>
+body{font-family:Arial;background:#f2f2f2;padding:30px}
+.box{background:#fff;padding:20px;border-radius:10px;width:400px}
+textarea,button{width:100%;margin-top:10px;padding:10px}
+</style>
 </head>
 <body>
-<div class="card">
-    <h2>Nome do serviço</h2>
-
-    {% if error %}
-        <p class="error">{{ error }}</p>
-    {% endif %}
-
-    <form method="post">
-        <input name="service" placeholder="Nome do serviço">
-        <button>Criar serviço</button>
-    </form>
+<div class="box">
+<h2>{{name}}</h2>
+<form method="post">
+<textarea name="msg" placeholder="Mensagem"></textarea>
+<button>Enviar</button>
+</form>
+<p>GET: /link/{{name}}/getmsg</p>
 </div>
 </body>
 </html>
