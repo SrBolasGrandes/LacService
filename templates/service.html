@@ -1,147 +1,30 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>{{name}}</title>
+<title>Serviço</title>
 <style>
-*{box-sizing:border-box}
-body{
-    margin:0;
-    font-family:Segoe UI,Arial;
-    background:#f4f6f8;
-    height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-}
-.container{
-    position:relative;
-    width:520px;
-}
-.box{
-    background:#fff;
-    padding:30px;
-    border-radius:16px;
-    box-shadow:0 20px 40px rgba(0,0,0,.15);
-    z-index:1;
-}
-h2{margin-top:0;font-size:26px}
-textarea{
-    width:100%;
-    height:120px;
-    padding:14px;
-    font-size:15px;
-    border-radius:12px;
-    border:1px solid #ccc;
-    resize:none;
-}
-.send{
-    width:100%;
-    margin-top:14px;
-    padding:14px;
-    font-size:16px;
-    border:none;
-    border-radius:12px;
-    background:#6a5acd;
-    color:#fff;
-    cursor:pointer;
-}
-.plus{
-    position:absolute;
-    top:-18px;
-    right:-18px;
-    width:46px;
-    height:46px;
-    border-radius:50%;
-    background:#6a5acd;
-    color:#fff;
-    font-size:26px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
-    z-index:3;
-    box-shadow:0 10px 25px rgba(0,0,0,.3);
-}
-
-/* OVERLAY */
-.overlay{
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    background:rgba(0,0,0,.75);
-    backdrop-filter:blur(6px);
-    display:none;
-    justify-content:center;
-    align-items:center;
-    z-index:2;
-}
-
-/* SCRIPT BOX */
-.script-box{
-    position:relative;
-    background:#f0f0f0;
-    color:#000;
-    padding:22px;
-    width:420px;
-    border-radius:14px;
-    font-family:monospace;
-    font-size:14px;
-    box-shadow:0 20px 40px rgba(0,0,0,.4);
-}
-.copy-btn{
-    position:absolute;
-    top:10px;
-    right:10px;
-    background:#6a5acd;
-    color:#fff;
-    border:none;
-    border-radius:8px;
-    padding:6px 14px;
-    cursor:pointer;
-    font-size:13px;
-}
-pre{
-    margin:0;
-    white-space:pre-wrap;
-}
+body{background:#0f0f0f;color:#fff;font-family:sans-serif;padding:30px}
+textarea{width:100%;height:100px;border-radius:10px;padding:10px}
+button{margin-top:10px;padding:10px;border-radius:10px;border:none;background:#4f46e5;color:white}
+.box{background:#e5e7eb;color:black;padding:15px;border-radius:10px;margin-top:20px;position:relative}
+.copy{position:absolute;top:10px;right:10px}
 </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="plus" onclick="toggleMenu()">+</div>
+<form method="post">
+<textarea name="message"></textarea>
+<button>Enviar</button>
+</form>
 
-    <div class="box">
-        <h2>{{name}}</h2>
-        <form method="post">
-            <textarea name="msg" placeholder="Digite a mensagem"></textarea>
-            <button class="send">Enviar</button>
-        </form>
-    </div>
+<div class="box">
+<button class="copy" onclick="navigator.clipboard.writeText(this.nextElementSibling.innerText)">Copiar</button>
+<pre>
+mode{loop}
+webrequest{https://lacservice.onrender.com/link/{{service.name}}/getmsg*GET}
+cooldown{2}
+</pre>
 </div>
-
-<div class="overlay" id="overlay" onclick="toggleMenu()">
-    <div class="script-box" onclick="event.stopPropagation()">
-        <button class="copy-btn" onclick="copiar()">Copiar</button>
-<pre id="script">mode{loop}
-webrequest{https://lacservice.onrender.com/link/{{name}}/getmsg*GET}
-cooldown{2}</pre>
-    </div>
-</div>
-
-<script>
-function toggleMenu(){
-    const o = document.getElementById("overlay")
-    o.style.display = o.style.display === "flex" ? "none" : "flex"
-}
-
-function copiar(){
-    const t = document.getElementById("script").innerText
-    navigator.clipboard.writeText(t)
-}
-</script>
 
 </body>
 </html>
