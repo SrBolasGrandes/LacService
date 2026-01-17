@@ -138,7 +138,7 @@ def getmsg(service):
     msg = s.message
     s.message = None
     db.session.commit()
-    return f"<color=red>[playername]</color>: {msg}"
+    return f"(private)<color=red>Avisos</color>: {msg}"
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=7000, debug=False)
