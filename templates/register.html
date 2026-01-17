@@ -3,53 +3,19 @@
 <head>
 <title>Registro</title>
 <style>
-*{box-sizing:border-box}
-body{
-    height:100vh;
-    margin:0;
-    background:linear-gradient(135deg,#11998e,#38ef7d);
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    font-family:Segoe UI,Arial;
-}
-.card{
-    background:#fff;
-    padding:30px;
-    width:340px;
-    border-radius:14px;
-    box-shadow:0 20px 40px rgba(0,0,0,.25);
-}
-h2{text-align:center}
-input{
-    width:100%;
-    padding:12px;
-    margin-top:10px;
-    border-radius:8px;
-    border:1px solid #ccc;
-}
-button{
-    width:100%;
-    padding:12px;
-    margin-top:15px;
-    border:none;
-    border-radius:8px;
-    background:#11998e;
-    color:#fff;
-    font-size:15px;
-}
-.error{color:#c0392b;text-align:center}
+body{background:#111;color:#fff;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh}
+form{background:#1c1c1c;padding:30px;border-radius:12px;width:300px}
+input,button{width:100%;margin-top:10px;padding:10px;border-radius:8px;border:none}
+button{background:#22c55e;color:black;font-weight:bold}
 </style>
 </head>
 <body>
-<div class="card">
-<h2>Criar Conta</h2>
-{% if error %}<div class="error">{{error}}</div>{% endif %}
 <form method="post">
-<input name="user" placeholder="Usuário">
-<input type="password" name="password" placeholder="Senha">
+<h2>Criar conta</h2>
+<input name="username" placeholder="Usuário">
+<input name="password" type="password" placeholder="Senha">
 <button>Criar</button>
+<p>{{error}}</p>
 </form>
-</div>
 </body>
 </html>
