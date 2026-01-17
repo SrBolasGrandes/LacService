@@ -3,75 +3,23 @@
 <head>
 <title>Dashboard</title>
 <style>
-*{box-sizing:border-box}
-body{
-    margin:0;
-    font-family:Segoe UI,Arial;
-    background:#f4f6f8;
-    padding:40px;
-}
-.header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:30px;
-}
-h2{font-size:28px}
-form{
-    display:flex;
-    gap:10px;
-}
-input{
-    padding:14px;
-    font-size:16px;
-    border-radius:10px;
-    border:1px solid #ccc;
-}
-button{
-    padding:14px 22px;
-    font-size:16px;
-    border:none;
-    border-radius:10px;
-    background:#6a5acd;
-    color:#fff;
-    cursor:pointer;
-}
-.grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
-    gap:20px;
-}
-.card{
-    background:#fff;
-    padding:22px;
-    border-radius:14px;
-    box-shadow:0 10px 25px rgba(0,0,0,.1);
-}
-.card a{
-    text-decoration:none;
-    font-size:18px;
-    font-weight:600;
-    color:#333;
-}
+body{background:#0f0f0f;color:#fff;font-family:sans-serif;padding:30px}
+.card{background:#1c1c1c;padding:20px;border-radius:12px;margin-bottom:15px}
+.add{position:fixed;top:20px;right:20px;font-size:30px;background:#4f46e5;color:white;border-radius:50%;width:50px;height:50px;border:none}
 </style>
 </head>
 <body>
 
-<div class="header">
-<h2>Dashboard</h2>
-<form method="post" action="/create_service">
-<input name="service" placeholder="Nome do serviço">
-<button>Criar</button>
+<form method="post" action="/service/create">
+<input name="name" placeholder="Novo serviço">
+<button class="add">+</button>
 </form>
-</div>
 
-<div class="grid">
 {% for s in services %}
 <div class="card">
-<a href="/service/{{s}}">{{s}}</a>
+<a href="/service/{{s.id}}" style="color:white">{{s.name}}</a>
 </div>
 {% endfor %}
-</div>
 
 </body>
 </html>
