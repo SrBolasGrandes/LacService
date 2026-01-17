@@ -8,38 +8,50 @@ body{
     margin:0;
     font-family:Segoe UI,Arial;
     background:#f4f6f8;
-    padding:30px;
+    padding:40px;
 }
 .header{
     display:flex;
     justify-content:space-between;
     align-items:center;
-    margin-bottom:20px;
+    margin-bottom:30px;
+}
+h2{font-size:28px}
+form{
+    display:flex;
+    gap:10px;
+}
+input{
+    padding:14px;
+    font-size:16px;
+    border-radius:10px;
+    border:1px solid #ccc;
 }
 button{
-    padding:10px 16px;
+    padding:14px 22px;
+    font-size:16px;
     border:none;
-    border-radius:8px;
+    border-radius:10px;
     background:#6a5acd;
     color:#fff;
     cursor:pointer;
 }
 .grid{
     display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
-    gap:15px;
+    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+    gap:20px;
 }
 .card{
     background:#fff;
-    padding:18px;
-    border-radius:12px;
+    padding:22px;
+    border-radius:14px;
     box-shadow:0 10px 25px rgba(0,0,0,.1);
 }
-a{text-decoration:none;color:#333;font-weight:600}
-input{
-    padding:10px;
-    border-radius:8px;
-    border:1px solid #ccc;
+.card a{
+    text-decoration:none;
+    font-size:18px;
+    font-weight:600;
+    color:#333;
 }
 </style>
 </head>
@@ -48,7 +60,7 @@ input{
 <div class="header">
 <h2>Dashboard</h2>
 <form method="post" action="/create_service">
-<input name="service" placeholder="Novo serviço">
+<input name="service" placeholder="Nome do serviço">
 <button>Criar</button>
 </form>
 </div>
