@@ -1,4 +1,5 @@
 import os
+import json
 import requests
 from flask import Flask, render_template, request, redirect, session
 
@@ -8,9 +9,19 @@ app.secret_key = os.getenv("FLASK_SECRET", "secret")
 SITE_KEY = os.getenv("RECAPTCHA_SITE_KEY")
 SECRET_KEY = os.getenv("RECAPTCHA_SECRET_KEY")
 
-users = {}
-services = {}
-messages = {}
+DATA_FILE = "data.json"
+
+def load_data():
+    if not os.path.exists(DATA_FILE):
+        return {"users": {}, "services": {}, "messages": {}}
+    with open(DATA_FILE, "r") as f:
+        return json.load(f)
+
+def save_data(data):
+    with open(DATA_FILE, "w") as f:
+        json.dump(data, f, indent=2)
+
+data = load_data()
 
 def valid_user(u):
     return len(u) >= 6 and u.isalnum()
@@ -36,7 +47,7 @@ def login():
     if request.method == "POST":
         u = request.form["user"]
         p = request.form["password"]
-        user = users.get(u)
+        user = data["users"].get(u)
 
         if not user:
             error = "Login inválido"
@@ -48,9 +59,11 @@ def login():
 
             if user["password"] != p:
                 user["errors"] += 1
+                save_data(data)
                 error = "Senha incorreta"
             else:
                 user["errors"] = 0
+                save_data(data)
                 session["user"] = u
                 return redirect("/dashboard")
 
@@ -59,18 +72,24 @@ def login():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     error = None
+
     if request.method == "POST":
         u = request.form["user"]
         p = request.form["password"]
 
-        if u in users:
+        if u in data["users"]:
             error = "Já existe um usuário com esse nome"
         elif not valid_user(u):
             error = "Usuário precisa ter letras e números (mín. 6)"
         elif not valid_pass(p):
             error = "Senha precisa ter 3 caracteres e um número"
         else:
-            users[u] = {"password": p, "services": [], "errors": 0}
+            data["users"][u] = {
+                "password": p,
+                "errors": 0,
+                "services": []
+            }
+            save_data(data)
             session["user"] = u
             return redirect("/dashboard")
 
@@ -80,36 +99,48 @@ def register():
 def dashboard():
     if "user" not in session:
         return redirect("/login")
-    return render_template("dashboard.html", services=users[session["user"]]["services"])
+    return render_template(
+        "dashboard.html",
+        services=data["users"][session["user"]]["services"]
+    )
 
 @app.route("/create_service", methods=["POST"])
 def create_service():
-    name = request.form["service"]
-    u = session["user"]
+    if "user" not in session:
+        return redirect("/login")
 
-    if name and name not in services:
-        services[name] = u
-        messages[name] = None
-        users[u]["services"].append(name)
+    name = request.form["service"]
+    user = session["user"]
+
+    if name and name not in data["services"]:
+        data["services"][name] = user
+        data["messages"][name] = None
+        data["users"][user]["services"].append(name)
+        save_data(data)
 
     return redirect("/dashboard")
 
 @app.route("/service/<name>", methods=["GET", "POST"])
 def service(name):
-    if "user" not in session or services.get(name) != session["user"]:
+    if "user" not in session:
         return redirect("/login")
 
+    if data["services"].get(name) != session["user"]:
+        return redirect("/dashboard")
+
     if request.method == "POST":
-        messages[name] = request.form["msg"]
+        data["messages"][name] = request.form["msg"]
+        save_data(data)
 
     return render_template("service.html", name=name)
 
 @app.route("/link/<name>/getmsg")
 def getmsg(name):
-    msg = messages.get(name)
+    msg = data["messages"].get(name)
     if not msg:
         return ""
-    messages[name] = None
+    data["messages"][name] = None
+    save_data(data)
     return f"|| MENSAGEM || : {msg}"
 
 if __name__ == "__main__":
